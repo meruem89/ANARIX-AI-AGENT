@@ -18,6 +18,4 @@ A powerful AI-driven business intelligence platform that converts natural langua
 - **Visualization**: Plotly, Matplotlib, Seaborn
 - **Frontend**: HTML5, JavaScript, CSS3
 
-## Installation
 
-1. Clone the repository:
