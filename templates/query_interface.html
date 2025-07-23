@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANARIX AI Agent - Business Intelligence</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .query-form {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #results {
+            display: none;
+            margin-top: 30px;
+        }
+        .result-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .sql-query {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .visualization-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .chart-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .insights-container {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #f44336;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+        .text-chart {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 ANARIX AI Agent</h1>
+            <p>Natural Language to SQL with Guaranteed Visualizations</p>
+        </div>
+        
+        <div class="query-form">
+            <form id="queryForm">
+                <div class="form-group">
+                    <label for="question">Ask Your Business Question:</label>
+                    <textarea 
+                        id="question" 
+                        name="question" 
+                        placeholder="e.g., Show me products with CPC under $2, or What are our top 10 products by revenue?"
+                        required
+                    ></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    📊 Generate Query & Visualization
+                </button>
+            </form>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('queryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await processQuery();
+        });
+
+        async function processQuery() {
+            const question = document.getElementById('question').value.trim();
+            if (!question) {
+                alert('Please enter a question!');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultsDiv = document.getElementById('results');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Processing...';
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">🔄 Processing your query and generating visualization...</div>';
+
+            try {
+                const formData = new FormData();
+                formData.append('question', question);
+
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                }
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Request failed: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '📊 Generate Query & Visualization';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div class="success fade-in">
+                    <h3>✅ Query Processed Successfully</h3>
+                    <p><strong>Question:</strong> ${data.question}</p>
+                    <p><strong>Records Found:</strong> ${data.record_count}</p>
+                    <p><strong>Processing Time:</strong> ${data.processing_time}</p>
+                </div>
+
+                <div class="result-section fade-in">
+                    <h3>🔍 Generated SQL Query</h3>
+                    <div class="sql-query">${data.generated_sql}</div>
+                </div>
+
+                <div class="result-section fade-in">
+                    <h3>📝 Query Explanation</h3>
+                    <p>${data.explanation}</p>
+                </div>
+
+                <div class="result-section fade-in">
+                    <h3>📊 Query Results (${data.record_count} records)</h3>
+                    ${formatResultsTable(data.data)}
+                </div>
+            `;
+
+            // Add visualization
+            if (data.visualization) {
+                html += createVisualizationHTML(data.visualization);
+            }
+
+            // Add business insights
+            if (data.insights) {
+                html += createInsightsHTML(data.insights);
+            }
+
+            resultsDiv.innerHTML = html;
+
+            // Render visualizations
+            if (data.visualization) {
+                renderVisualization(data.visualization);
+            }
+        }
+
+        function formatResultsTable(data) {
+            if (!data || data.length === 0) {
+                return '<p>No results found.</p>';
+            }
+
+            const headers = Object.keys(data[0]);
+            let html = '<table class="data-table"><thead><tr>';
+            
+            headers.forEach(header => {
+                html += `<th>${header.replace('_', ' ').toUpperCase()}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            data.slice(0, 20).forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    const value = row[header];
+                    let displayValue = '';
+                    
+                    if (value === null || value === undefined) {
+                        displayValue = '-';
+                    } else if (typeof value === 'number') {
+                        displayValue = value % 1 === 0 ? value.toLocaleString() : value.toFixed(2);
+                    } else {
+                        displayValue = value.toString();
+                    }
+                    
+                    html += `<td>${displayValue}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            
+            if (data.length > 20) {
+                html += `<p><em>Showing first 20 of ${data.length} total results.</em></p>`;
+            }
+
+            return html;
+        }
+
+        function createVisualizationHTML(viz) {
+            return `
+                <div class="visualization-container fade-in">
+                    <h3>📈 ${viz.title || 'Data Visualization'}</h3>
+                    <div id="chartContainer">
+                        ${viz.chart_type === 'plotly_bar' ? '<div id="plotlyChart" style="width: 100%; height: 500px;"></div>' : ''}
+                        ${viz.chart_type === 'matplotlib_bar' ? `<img src="data:image/png;base64,${viz.chart_base64}" style="max-width: 100%; height: auto;" alt="Chart"/>` : ''}
+                        ${viz.chart_type === 'text_chart' ? `<div class="text-chart">${viz.text_chart}</div>` : ''}
+                        ${viz.chart_type === 'no_data' ? '<p>No data available for visualization</p>' : ''}
+                        ${viz.chart_type === 'error' ? `<p class="error">Visualization error: ${viz.reason}</p>` : ''}
+                    </div>
+                    
+                    <div class="chart-info">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span><strong>Chart Type:</strong> ${viz.chart_type.replace('_', ' ').toUpperCase()}</span>
+                            <span><strong>Data Points:</strong> ${viz.data_summary?.total_records || 'N/A'}</span>
+                            <span><strong>Quality:</strong> ${viz.data_summary?.data_quality || 'Unknown'}</span>
+                        </div>
+                        
+                        ${viz.recommendations && viz.recommendations.length > 0 ? `
+                            <div>
+                                <strong>💡 Insights:</strong>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    ${viz.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createInsightsHTML(insights) {
+            return `
+                <div class="insights-container fade-in">
+                    <h3>🧠 Business Intelligence Insights</h3>
+                    <p><strong>Summary:</strong> ${insights.summary}</p>
+                    
+                    ${insights.key_findings && insights.key_findings.length > 0 ? `
+                        <div style="margin: 15px 0;">
+                            <strong>🔍 Key Findings:</strong>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                ${insights.key_findings.map(finding => `<li>${finding}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${insights.recommendations && insights.recommendations.length > 0 ? `
+                        <div style="margin: 15px 0;">
+                            <strong>📈 Recommendations:</strong>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                ${insights.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <p><strong>Data Quality:</strong> <span style="color: green; font-weight: bold;">${insights.data_quality}</span></p>
+                </div>
+            `;
+        }
+
+        function renderVisualization(viz) {
+            if (viz.chart_type === 'plotly_bar' && viz.chart_json) {
+                try {
+                    const chartData = JSON.parse(viz.chart_json);
+                    Plotly.newPlot('plotlyChart', chartData.data, chartData.layout, {
+                        responsive: true,
+                        displayModeBar: true
+                    });
+                } catch (e) {
+                    console.error('Plotly rendering error:', e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
